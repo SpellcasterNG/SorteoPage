@@ -1,0 +1,132 @@
+﻿@page "/PageSorteo2"
+@inject IJSRuntime JS
+@using System;
+@using System.Collections.Generic;
+@using System.Web
+@using BlafettisLib
+@using System.IO
+@inject HttpClient Http
+<PageTitle>Neutral Logistics</PageTitle>
+
+<div class="text-center">
+    <img src="Img/LOGO_SP.png" style="width:150px; height:100px;" />
+</div>
+
+<form>
+    <div class="text-center" style="margin-bottom: 30px;margin-top: 30px;">
+        <button type="button" class="btn btn-lg btn-primary" @onclick="Thecall">
+
+            Generar Ganador
+            <Blafettis @ref="blafettis"
+                       angle="@angle"
+                       spread="@spread"
+                       startVelocity="@startVelocity"
+                       elementCount="@elementCount"
+                       width="@widthCss"
+                       height="@heightCss"
+                       colors="@colors"
+                       duration="@duration"
+                       stagger="@stagger"
+                       dragFriction="@dragFrictionCooked" />
+        </button>
+        <button type="button" class="btn btn-lg btn-primary" @onclick="GirarTombola">Girar Tombola</button>
+        <br />
+        <br />
+        @if (Gnombre == null)
+        {
+            <img src="@imag" />
+        }
+        else
+        {
+            <img src="Img/winner.gif" />
+            <h1 style="text-align:center">@Gnumero @Gnombre.ToUpper() </h1>
+
+        }
+    </div>
+</form>
+<OptionsDemoCode />
+
+@code {
+    private int currentCount = 0;
+    protected Blafettis blafettis;
+    private string imag = $"Img/tombola.gif";
+
+    private void IncrementCount()
+    {
+        currentCount++;
+        blafettis.RaiseConfetti();
+    }
+    protected void Thecall()
+    {
+        Generate_Usuario_Ganador();
+    }
+    protected void GirarTombola()
+    {
+        imag = $"Img/tombola.gif";
+        Gnombre = null;
+    }
+    private double angle { get; set; } = 90;
+    private double spread { get; set; } = 116;
+    private double startVelocity { get; set; } = 48;
+    private int elementCount { get; set; } = 200;
+    private int width { get; set; } = 10;
+    private int height { get; set; } = 10;
+    private string widthCss => $"{width}px";
+    private string heightCss => $"{height}px";
+    private string[] colors { get; set; } = BlafettisLibHelper.defaultColors;
+    private long duration { get; set; } = 10000;
+    private double stagger { get; set; } = 0;
+    private double dragFriction { get; set; } = 10;
+    private double dragFrictionCooked => dragFriction / 100;
+
+    List<String> usuario1 = new List<String>
+    {
+         String.Empty
+    };
+    int Cantidad_Participantes;
+    List<string> empList;
+    private usuarios[]? holas;
+    private usuarios[]? holas1;
+    int cantidad;
+    int Id_Usuario_Ganador = 0;
+    private usuarios[]? NombreGanador;
+    private int Gnumero;
+    private string Gnombre;
+    private string Gdepartamento;
+    private int VGnumero;
+    private string VGnombre;
+    private string VGdepartamento;
+    private Timer timer;
+    protected override async Task OnInitializedAsync()
+    {
+        holas = await Http.GetFromJsonAsync<usuarios[]>("sample-data/ListPerson.json");
+        holas1 = holas;
+        cantidad = holas1.Count();
+    }
+    public class usuarios
+    {
+        public int Numero { get; set; }
+        public string Nombre { get; set; }
+        public string Departamento { get; set; }
+    }
+    private async void Generate_Usuario_Ganador()
+    {
+        Random random = new Random();
+        var Ganador = holas1.ElementAt(random.Next(0, cantidad));
+        Gnumero = Ganador.Numero;
+        Gnombre = Ganador.Nombre;
+        Gdepartamento = Ganador.Departamento;
+        IncrementCount();
+        holas1 = holas1.Where(val => val != Ganador).ToArray();
+        cantidad = holas1.Count();
+        imag = $"Img/winner.gif";
+
+    }
+    private void VistaUsuarioGanador()
+    {
+        VGnumero = Gnumero;
+        VGnombre = Gnombre;
+        VGdepartamento = Gdepartamento;
+        imag = $"Img/tombola.gif";
+    }
+}
